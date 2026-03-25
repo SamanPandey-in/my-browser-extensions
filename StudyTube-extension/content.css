@@ -1,0 +1,408 @@
+/* ── StudyTube AI – Content Styles ──────────────────────────────────────── */
+
+:root {
+  --lt-bg:        #0f1117;
+  --lt-card:      #181c27;
+  --lt-border:    rgba(255,255,255,0.08);
+  --lt-text:      #f0f2f8;
+  --lt-muted:     #7b82a0;
+  --lt-accent:    #6c63ff;
+  --lt-accent2:   #a78bfa;
+  --lt-green:     #22c55e;
+  --lt-red:       #ef4444;
+  --lt-amber:     #f59e0b;
+  --lt-radius:    16px;
+  --lt-shadow:    0 24px 80px rgba(0,0,0,0.7), 0 4px 24px rgba(108,99,255,0.2);
+}
+
+/* ─── Overlay Container ──────────────────────────────────────────────────── */
+#lt-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
+  pointer-events: all;
+}
+#lt-overlay.lt-visible { opacity: 1; }
+
+/* ─── Backdrop ───────────────────────────────────────────────────────────── */
+.lt-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.80);
+  backdrop-filter: blur(6px);
+}
+
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+.lt-card {
+  position: relative;
+  z-index: 1;
+  background: var(--lt-card);
+  border: 1px solid var(--lt-border);
+  border-radius: var(--lt-radius);
+  padding: 28px 32px 24px;
+  width: min(520px, 90vw);
+  box-shadow: var(--lt-shadow);
+  transform: translateY(12px) scale(0.97);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  max-height: 85vh;
+  overflow-y: auto;
+  color: var(--lt-text);
+  scrollbar-width: thin;
+  scrollbar-color: var(--lt-border) transparent;
+}
+#lt-overlay.lt-visible .lt-card {
+  transform: translateY(0) scale(1);
+}
+
+/* ─── Card Header ────────────────────────────────────────────────────────── */
+.lt-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.lt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(108,99,255,0.15);
+  border: 1px solid rgba(108,99,255,0.3);
+  border-radius: 100px;
+  padding: 4px 12px 4px 8px;
+}
+.lt-pill-icon { font-size: 14px; }
+.lt-pill-text {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--lt-accent2);
+  text-transform: uppercase;
+}
+
+.lt-counter {
+  font-size: 12px;
+  color: var(--lt-muted);
+  font-weight: 500;
+}
+
+/* ─── Progress Bar ───────────────────────────────────────────────────────── */
+.lt-progress-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 100px;
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+.lt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--lt-accent), var(--lt-accent2));
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+/* ─── Question ───────────────────────────────────────────────────────────── */
+.lt-question {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--lt-text);
+  margin: 0 0 20px;
+}
+
+/* ─── Options ────────────────────────────────────────────────────────────── */
+.lt-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.lt-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--lt-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  color: var(--lt-text);
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+}
+.lt-option:hover:not(:disabled) {
+  background: rgba(108,99,255,0.1);
+  border-color: rgba(108,99,255,0.4);
+}
+.lt-option.lt-selected {
+  background: rgba(108,99,255,0.18);
+  border-color: var(--lt-accent);
+}
+.lt-option:disabled { cursor: not-allowed; opacity: 0.8; }
+.lt-option.lt-correct {
+  background: rgba(34,197,94,0.15);
+  border-color: var(--lt-green);
+}
+.lt-option.lt-incorrect {
+  background: rgba(239,68,68,0.15);
+  border-color: var(--lt-red);
+}
+
+.lt-opt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--lt-muted);
+  transition: all 0.18s ease;
+}
+.lt-option.lt-selected .lt-opt-badge {
+  background: var(--lt-accent);
+  color: #fff;
+}
+.lt-option.lt-correct .lt-opt-badge {
+  background: var(--lt-green);
+  color: #fff;
+}
+.lt-option.lt-incorrect .lt-opt-badge {
+  background: var(--lt-red);
+  color: #fff;
+}
+.lt-opt-text { font-size: 14px; line-height: 1.45; }
+
+/* ─── Feedback ───────────────────────────────────────────────────────────── */
+.lt-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  min-height: 0;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.lt-feedback.lt-fb-correct,
+.lt-feedback.lt-fb-incorrect {
+  max-height: 200px;
+}
+.lt-fb-correct {
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.25);
+  color: #a7f3c4;
+}
+.lt-fb-incorrect {
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #fca5a5;
+}
+.lt-fb-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+.lt-fb-text strong { display: block; margin-bottom: 2px; }
+
+/* ─── Footer ─────────────────────────────────────────────────────────────── */
+.lt-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.lt-btn-skip {
+  background: transparent;
+  border: 1.5px solid var(--lt-border);
+  color: var(--lt-muted);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+.lt-btn-skip:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: var(--lt-text);
+}
+
+.lt-btn-submit {
+  background: var(--lt-accent);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+.lt-btn-submit:hover:not(:disabled) {
+  background: var(--lt-accent2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(108,99,255,0.4);
+}
+.lt-btn-submit:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Final Quiz Card ────────────────────────────────────────────────────── */
+.lt-final-card { width: min(540px, 92vw); }
+
+.lt-score-circle {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin: 20px auto 18px;
+}
+.lt-donut { width: 100%; height: 100%; }
+.lt-score-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.lt-score-num {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--lt-text);
+  line-height: 1;
+}
+.lt-score-label {
+  font-size: 11px;
+  color: var(--lt-muted);
+  font-weight: 600;
+  text-align: center;
+  margin-top: 4px;
+  max-width: 80px;
+}
+
+.lt-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+.lt-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.lt-stat-num { font-size: 22px; font-weight: 800; color: var(--lt-text); }
+.lt-stat-lbl { font-size: 11px; color: var(--lt-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+.lt-stat-green { color: var(--lt-green); }
+.lt-stat-red   { color: var(--lt-red);   }
+
+.lt-divider {
+  height: 1px;
+  background: var(--lt-border);
+  margin: 4px 0 16px;
+}
+
+.lt-review-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--lt-muted);
+  margin: 0 0 12px;
+}
+
+.lt-review-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.lt-review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--lt-border);
+}
+.lt-rev-correct  { border-color: rgba(34,197,94,0.2);  }
+.lt-rev-incorrect{ border-color: rgba(239,68,68,0.2);   }
+.lt-rev-skipped  { opacity: 0.55; }
+.lt-rev-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.lt-rev-q { font-size: 13px; line-height: 1.4; flex: 1; color: var(--lt-text); }
+.lt-rev-ans { display: block; font-size: 11px; color: var(--lt-green); margin-top: 3px; }
+
+.lt-final-footer { justify-content: center; }
+
+/* ─── Seekbar Dots ───────────────────────────────────────────────────────── */
+.lt-seekdot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.2s ease, background 0.2s ease;
+  pointer-events: all;
+}
+.lt-seekdot-ready {
+  background: var(--lt-accent);
+  border-color: var(--lt-accent2);
+  box-shadow: 0 0 6px rgba(108,99,255,0.8);
+}
+.lt-seekdot:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+}
+
+/* ─── Status Badge ───────────────────────────────────────────────────────── */
+#lt-badge {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 99999;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Google Sans', system-ui, sans-serif;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+  max-width: 280px;
+}
+#lt-badge.lt-badge-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.lt-badge-info {
+  background: #1e2230;
+  color: #a0aec0;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.lt-badge-ok {
+  background: rgba(34,197,94,0.15);
+  color: #86efac;
+  border: 1px solid rgba(34,197,94,0.3);
+}
+.lt-badge-warn {
+  background: rgba(245,158,11,0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245,158,11,0.3);
+}

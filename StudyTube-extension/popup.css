@@ -1,0 +1,237 @@
+/* ── StudyTube AI Popup Styles ────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #10121c;
+  --surface:   #181b28;
+  --border:    rgba(255,255,255,0.07);
+  --text:      #eeeef5;
+  --muted:     #64697e;
+  --accent:    #6c63ff;
+  --accent2:   #a78bfa;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --r:         10px;
+}
+
+body {
+  width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { padding: 0 0 8px; }
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(108,99,255,0.12), transparent);
+}
+
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  font-size: 22px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(108,99,255,0.15);
+  border: 1px solid rgba(108,99,255,0.3);
+  border-radius: 10px;
+}
+.logo-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.logo-tagline {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+/* Toggle switch */
+.toggle { cursor: pointer; display: flex; align-items: center; }
+.toggle input { display: none; }
+.toggle-track {
+  width: 40px;
+  height: 22px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 100px;
+  position: relative;
+  transition: background 0.25s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: var(--muted);
+  border-radius: 50%;
+  transition: transform 0.25s, background 0.25s;
+}
+.toggle input:checked + .toggle-track { background: var(--accent); }
+.toggle input:checked + .toggle-track::after { transform: translateX(18px); background: #fff; }
+
+/* ─── Sections ────────────────────────────────────────────────────────────── */
+.section { padding: 16px 18px 0; }
+
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.label-link {
+  font-size: 11px;
+  color: var(--accent2);
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.label-link:hover { text-decoration: underline; }
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.input {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: 'DM Mono', 'Fira Code', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--muted); }
+
+.icon-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 14px;
+  transition: border-color 0.2s, color 0.2s;
+  line-height: 1;
+}
+.icon-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+/* ─── Interval Buttons ───────────────────────────────────────────────────── */
+.interval-row { display: flex; gap: 6px; }
+.interval-btn {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+.interval-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+.interval-btn.active {
+  background: rgba(108,99,255,0.18);
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+
+/* ─── Save Button ────────────────────────────────────────────────────────── */
+.save-btn {
+  display: block;
+  width: calc(100% - 36px);
+  margin: 16px 18px 0;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  transition: all 0.2s;
+}
+.save-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,99,255,0.4); }
+.save-btn:active { transform: translateY(0); }
+
+/* ─── Status Bar ─────────────────────────────────────────────────────────── */
+.status-bar {
+  margin: 8px 18px 0;
+  font-size: 12px;
+  font-weight: 500;
+  min-height: 20px;
+  text-align: center;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+.status-bar.show { opacity: 1; }
+.status-bar.success { color: var(--green); }
+.status-bar.error   { color: var(--red); }
+
+/* ─── Stats ──────────────────────────────────────────────────────────────── */
+.stats-section { padding: 0 18px 4px; }
+.divider { height: 1px; background: var(--border); margin: 14px 0 12px; }
+.stats-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.stats-row { display: flex; justify-content: space-around; }
+.stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-num { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.stat-num.green { color: var(--green); }
+.stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ─── Footer ─────────────────────────────────────────────────────────────── */
+.footer {
+  padding: 12px 18px 6px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
