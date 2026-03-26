@@ -113,17 +113,78 @@
 
     // ─── Transcript Extraction ─────────────────────────────────────────────────
 
-    fetchTranscript() {
-      return new Promise(async resolve => {
-        const url = await this.getCaptionUrl();
-        if (!url) { resolve(null); return; }
+    fetchCaptionPayloadFromPage(url, timeout = 8000) {
+      return new Promise(resolve => {
+        const requestId = `st-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-        // Try JSON3 format first (more reliable)
+        const handler = e => {
+          const payload = e?.data?.__StudyTubeCaptionPayload;
+          if (!payload || payload.requestId !== requestId) return;
+          window.removeEventListener('message', handler);
+          clearTimeout(timer);
+          resolve(payload);
+        };
+
+        window.addEventListener('message', handler);
+        window.postMessage({ __StudyTubeFetchCaption: { requestId, url } }, '*');
+
+        const timer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          resolve(null);
+        }, timeout);
+      });
+    }
+
+    buildCaptionCandidates(rawUrl) {
+      const candidates = [];
+      const seen = new Set();
+      const add = (u) => {
+        if (!u || seen.has(u)) return;
+        seen.add(u);
+        candidates.push(u);
+      };
+
+      add(rawUrl);
+
+      try {
+        const parsed = new URL(rawUrl);
+        const v = parsed.searchParams.get('v') || this.videoId || this.parseVideoId();
+        const lang = parsed.searchParams.get('lang') || 'en';
+        const kind = parsed.searchParams.get('kind') || '';
+        const name = parsed.searchParams.get('name') || '';
+
+        if (v) {
+          let simple = `https://www.youtube.com/api/timedtext?v=${encodeURIComponent(v)}&lang=${encodeURIComponent(lang)}`;
+          if (kind) simple += `&kind=${encodeURIComponent(kind)}`;
+          if (name) simple += `&name=${encodeURIComponent(name)}`;
+          add(simple);
+          add(simple + '&fmt=json3');
+
+          let googleSimple = `https://video.google.com/timedtext?v=${encodeURIComponent(v)}&lang=${encodeURIComponent(lang)}`;
+          if (kind) googleSimple += `&kind=${encodeURIComponent(kind)}`;
+          if (name) googleSimple += `&name=${encodeURIComponent(name)}`;
+          add(googleSimple);
+          add(googleSimple + '&fmt=json3');
+        }
+
+        add(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 'fmt=json3');
+      } catch (_) {
+        add(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 'fmt=json3');
+      }
+
+      return candidates;
+    }
+
+    parseTranscriptFromPayload(text, contentType = '') {
+      const trimmed = (text || '').trim();
+      if (!trimmed) return [];
+
+      const looksLikeJson = contentType.includes('json') || trimmed.startsWith('{') || trimmed.startsWith('[');
+      if (looksLikeJson) {
         try {
-          const res = await fetch(url + '&fmt=json3');
-          const data = await res.json();
-          if (data.events) {
-            const items = data.events
+          const data = JSON.parse(trimmed);
+          if (data && data.events) {
+            return data.events
               .filter(e => e.segs && e.tStartMs != null)
               .map(e => ({
                 start: e.tStartMs / 1000,
@@ -131,29 +192,81 @@
                 text:  e.segs.map(s => s.utf8 || '').join(' ').replace(/\n/g, ' ').trim()
               }))
               .filter(e => e.text);
-            resolve(items.length ? items : null);
-            return;
           }
-        } catch (_) {}
+        } catch (_) { /* ignore and try XML */ }
+      }
 
-        // Fallback to XML
+      try {
+        const doc = new DOMParser().parseFromString(trimmed, 'text/xml');
+        return Array.from(doc.querySelectorAll('text')).map(el => ({
+          start: parseFloat(el.getAttribute('start') || '0'),
+          dur:   parseFloat(el.getAttribute('dur')   || '2'),
+          text:  (el.textContent || '')
+                    .replace(/&amp;/g,  '&')
+                    .replace(/&lt;/g,   '<')
+                    .replace(/&gt;/g,   '>')
+                    .replace(/&#39;/g,  "'")
+                    .replace(/&quot;/g, '"')
+                    .trim()
+        })).filter(e => e.text);
+      } catch (_) {
+        return [];
+      }
+    }
+
+    fetchTranscript() {
+      return new Promise(async resolve => {
+        const url = await this.getCaptionUrl();
+        if (!url) {
+          this.showStatus('No caption URL available');
+          resolve(null); return;
+        }
+
+        const candidates = this.buildCaptionCandidates(url);
+        console.log('StudyTube: caption candidates ->', candidates);
+
+        // Try each candidate until one parses into transcript items
         try {
-          const res  = await fetch(url);
-          const text = await res.text();
-          const doc  = new DOMParser().parseFromString(text, 'text/xml');
-          const items = Array.from(doc.querySelectorAll('text')).map(el => ({
-            start: parseFloat(el.getAttribute('start') || '0'),
-            dur:   parseFloat(el.getAttribute('dur')   || '2'),
-            text:  el.textContent
-                      .replace(/&amp;/g,  '&')
-                      .replace(/&lt;/g,   '<')
-                      .replace(/&gt;/g,   '>')
-                      .replace(/&#39;/g,  "'")
-                      .replace(/&quot;/g, '"')
-                      .trim()
-          })).filter(e => e.text);
-          resolve(items.length ? items : null);
-        } catch (_) {
+          for (let index = 0; index < candidates.length; index++) {
+            const candidate = candidates[index];
+            this.showStatus(`Fetching captions ${index + 1}/${candidates.length}`);
+            console.log('StudyTube: trying caption candidate ->', candidate);
+
+            let response = await this.fetchCaptionPayloadFromPage(candidate, 8000);
+            if (!response) {
+              const bgRes = await new Promise(resolveMsg => {
+                chrome.runtime.sendMessage({ type: 'FETCH_CAPTION_TEXT', url: candidate }, res => resolveMsg(res));
+              });
+              if (bgRes && bgRes.success) response = bgRes;
+            }
+
+            if (!response) {
+              console.warn('StudyTube: no response for candidate', candidate);
+              continue;
+            }
+            if (response.success === false) {
+              console.warn('StudyTube: candidate fetch failed', response.error || response);
+              continue;
+            }
+            if (!response.ok) {
+              console.warn('StudyTube: candidate returned status', response.status, response.statusText);
+              continue;
+            }
+
+            const items = this.parseTranscriptFromPayload(response.text || '', response.contentType || '');
+            console.log('StudyTube: parsed items ->', items.length, 'from candidate', candidate);
+            if (items.length > 0) {
+              this.showStatus(`Transcript parsed: ${items.length} items`);
+              resolve(items);
+              return;
+            }
+          }
+
+          this.showStatus('Failed to parse captions');
+          resolve(null);
+        } catch (err) {
+          console.warn('StudyTube: captions fetch error', err);
+          this.showStatus('Captions fetch error');
           resolve(null);
         }
       });
@@ -161,32 +274,40 @@
 
     getCaptionUrl() {
       return new Promise(resolve => {
+        this.showStatus('Waiting for caption URL…');
+        let settled = false;
+        let timeoutId = null;
+
+        const finish = (value, statusText) => {
+          if (settled) return;
+          settled = true;
+          if (timeoutId) clearTimeout(timeoutId);
+          if (statusText) this.showStatus(statusText);
+          resolve(value);
+        };
+
         const msgHandler = e => {
           if (e.data && e.data.__StudyTubeCaptionUrl !== undefined) {
             window.removeEventListener('message', msgHandler);
-            resolve(e.data.__StudyTubeCaptionUrl);
+            const url = e.data.__StudyTubeCaptionUrl;
+            const statusText = url ? `Caption URL found: ${url.substring(0,120)}` : 'Caption URL not found';
+            console.log('StudyTube: caption-url ->', url);
+            finish(url, statusText);
           }
         };
         window.addEventListener('message', msgHandler);
 
-        // Inject a tiny inline script to read from the page's JS context
+        // Inject an external script (CSP-safe) to read from the page's JS context
+        this.showStatus('Injecting caption reader script');
         const script = document.createElement('script');
-        script.textContent = `(function(){
-          try {
-            const tracks = (window.ytInitialPlayerResponse || {})
-              ?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-            const track = tracks.find(t => t.languageCode === 'en')
-                       || tracks.find(t => (t.languageCode || '').startsWith('en'))
-                       || tracks[0];
-            window.postMessage({ __StudyTubeCaptionUrl: track ? track.baseUrl : null }, '*');
-          } catch(e) {
-            window.postMessage({ __StudyTubeCaptionUrl: null }, '*');
-          }
-        })();`;
+        script.src = chrome.runtime.getURL('injected/caption-reader.js');
+        script.onload = () => script.remove();
         (document.head || document.documentElement).appendChild(script);
-        script.remove();
 
-        setTimeout(() => { window.removeEventListener('message', msgHandler); resolve(null); }, 4000);
+        timeoutId = setTimeout(() => {
+          window.removeEventListener('message', msgHandler);
+          finish(null, 'Timed out waiting for caption URL');
+        }, 8000);
       });
     }
 
@@ -526,6 +647,33 @@
           setTimeout(() => b.remove(), 400);
         }, autoDismiss);
       }
+    }
+
+    // Small persistent status element for debugging and visibility
+    showStatus(text, type = 'info') {
+      try {
+        let el = document.getElementById('lt-status');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'lt-status';
+          el.style.position = 'fixed';
+          el.style.right = '12px';
+          el.style.top = '12px';
+          el.style.zIndex = 2147483647;
+          el.style.background = 'rgba(0,0,0,0.7)';
+          el.style.color = '#fff';
+          el.style.padding = '6px 10px';
+          el.style.borderRadius = '6px';
+          el.style.fontSize = '12px';
+          el.style.maxWidth = '320px';
+          el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
+          el.style.pointerEvents = 'auto';
+          el.style.cursor = 'default';
+          document.body.appendChild(el);
+        }
+        el.textContent = text;
+        el.setAttribute('data-type', type);
+      } catch (e) { /* ignore */ }
     }
 
     // ─── Utilities ─────────────────────────────────────────────────────────────

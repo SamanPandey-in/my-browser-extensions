@@ -16,7 +16,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (message.type === 'FETCH_CAPTION_TEXT') {
+    fetchCaptionText(message.url)
+      .then(result => sendResponse({ success: true, ...result }))
+      .catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
 });
+
+async function fetchCaptionText(url) {
+  if (!url || typeof url !== 'string') {
+    throw new Error('Invalid caption URL');
+  }
+
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'omit'
+  });
+
+  const text = await res.text();
+  return {
+    ok: res.ok,
+    status: res.status,
+    statusText: res.statusText,
+    contentType: res.headers.get('content-type') || '',
+    text
+  };
+}
 
 async function handleGenerateQuestion(text, checkpointTime) {
   const { apiKey } = await chrome.storage.local.get(['apiKey']);

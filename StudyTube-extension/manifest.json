@@ -9,6 +9,7 @@
   ],
   "host_permissions": [
     "*://*.youtube.com/*",
+    "https://video.google.com/*",
     "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
@@ -20,6 +21,12 @@
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected/caption-reader.js"],
+      "matches": ["*://*.youtube.com/*"]
     }
   ],
   "action": {
