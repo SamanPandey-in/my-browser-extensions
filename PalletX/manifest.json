@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "PaletteX - CSS Variable & Color Viewer",
+  "version": "1.0",
+  "description": "Extracts CSS variables and color palette from any webpage.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
